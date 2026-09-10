@@ -1,0 +1,165 @@
+# -*- coding: utf-8 -*-
+
+import os
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
+
+
+# ============================================================
+# 1. 文件路径
+# ============================================================
+
+excel_file = r"D:\下载\JRA55_西脊点_41-49候_20年平均处理.xlsx"
+sheet_name = "标准三阶段_宽表"
+
+out_dir = r"D:\下载\JRA55_western_ridge_figures"
+os.makedirs(out_dir, exist_ok=True)
+
+out_png = os.path.join(out_dir, "Fig_WRP_longitude_pentad_NCC_style.png")
+out_pdf = os.path.join(out_dir, "Fig_WRP_longitude_pentad_NCC_style.pdf")
+
+
+# ============================================================
+# 2. 读取数据
+# ============================================================
+
+df = pd.read_excel(excel_file, sheet_name=sheet_name)
+
+print(df.head())
+print(df.columns)
+
+
+pentad = df["pentad"].values
+
+lon_1961_1980 = df["mean_lon_1961-1980"].values
+lon_1981_2000 = df["mean_lon_1981-2000"].values
+lon_2001_2020 = df["mean_lon_2001-2020"].values
+
+# 近阶段相对于早期阶段的差值
+delta_lon = df["delta_lon_2001_2020_minus_1961_1980"].values
+
+
+# ============================================================
+# 3. 画图风格设置
+# ============================================================
+
+plt.rcParams.update({
+    "font.family": "Arial",
+    "font.size": 8,
+    "axes.linewidth": 0.8,
+    "axes.labelsize": 8,
+    "xtick.labelsize": 7.5,
+    "ytick.labelsize": 7.5,
+    "legend.fontsize": 7.5,
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
+    "axes.unicode_minus": False,
+})
+
+
+# Nature Climate Change 风格常用：简洁、低饱和、色盲友好
+colors = {
+    "1961-1980": "#4D4D4D",   # dark grey
+    "1981-2000": "#0072B2",   # blue
+    "2001-2020": "#D55E00",   # vermillion
+}
+
+
+# ============================================================
+# 4. 绘制折线图
+# ============================================================
+
+fig, ax = plt.subplots(figsize=(3.45, 2.55), dpi=300)
+
+ax.plot(
+    pentad, lon_1961_1980,
+    color=colors["1961-1980"],
+    marker="o",
+    markersize=3.2,
+    linewidth=1.5,
+    label="1961–1980",
+)
+
+ax.plot(
+    pentad, lon_1981_2000,
+    color=colors["1981-2000"],
+    marker="o",
+    markersize=3.2,
+    linewidth=1.5,
+    label="1981–2000",
+)
+
+ax.plot(
+    pentad, lon_2001_2020,
+    color=colors["2001-2020"],
+    marker="o",
+    markersize=3.2,
+    linewidth=1.7,
+    label="2001–2020",
+)
+
+# ============================================================
+# 5. 坐标轴与辅助线
+# ============================================================
+
+ax.set_xlabel("Pentad")
+ax.set_ylabel("Longitude of WRP (°E)")
+
+ax.set_xlim(40.7, 49.3)
+ax.set_xticks(np.arange(41, 50, 1))
+
+# 根据你的数据自动留白
+ymin = np.nanmin([lon_1961_1980, lon_1981_2000, lon_2001_2020]) - 3
+ymax = np.nanmax([lon_1961_1980, lon_1981_2000, lon_2001_2020]) + 3
+ax.set_ylim(ymin, ymax)
+
+ax.yaxis.set_major_locator(MultipleLocator(5))
+ax.yaxis.set_minor_locator(MultipleLocator(2.5))
+
+# 只保留轻微横向网格
+ax.grid(axis="y", which="major", color="0.88", linewidth=0.6)
+ax.grid(axis="x", which="major", visible=False)
+
+# 去掉上、右边框
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+
+ax.tick_params(axis="both", which="major", length=3.0, width=0.8)
+ax.tick_params(axis="both", which="minor", length=2.0, width=0.6)
+
+# 图例
+ax.legend(
+    loc="upper right",
+    frameon=False,
+    handlelength=2.4,
+    borderaxespad=0.2,
+)
+
+# 面板标识
+ax.text(
+    0.01, 0.98,
+    "a",
+    transform=ax.transAxes,
+    ha="left",
+    va="top",
+    fontsize=9,
+    fontweight="bold",
+)
+
+
+
+# ============================================================
+# 6. 保存
+# ============================================================
+
+plt.tight_layout(pad=0.8)
+
+fig.savefig(out_png, dpi=600, bbox_inches="tight")
+fig.savefig(out_pdf, bbox_inches="tight")
+
+plt.show()
+
+print("PNG saved to:", out_png)
+print("PDF saved to:", out_pdf)
